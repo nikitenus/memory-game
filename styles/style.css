@@ -159,3 +159,81 @@ body {
   object-fit: contain;
   pointer-events: none;
 }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  outline: none;
+}
+
+.modal__title {
+  margin: 0 0 16px;
+  font-size: 1.25rem;
+}
+
+.modal__body {
+  margin-bottom: 20px;
+}
+
+.modal__message {
+  margin: 0 0 8px;
+}
+
+.modal__message--score {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid #475569;
+}
+
+.button--ghost:hover {
+  background: #334155;
+  filter: none;
+}
+
+.leaderboard {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard th,
+.leaderboard td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #334155;
+}
+
+.leaderboard th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.leaderboard td:nth-child(2) {
+  font-variant-numeric: tabular-nums;
+}

@@ -79,7 +79,15 @@
     return result;
   }
 
+  function formatDate(timestamp) {
+    var date = new Date(timestamp);
+    var day = String(date.getDate()).padStart(2, "0");
+    var month = String(date.getMonth() + 1).padStart(2, "0");
+    return day + "." + month + "." + date.getFullYear();
+  }
+
   MG.el = el;
   MG.clearNode = clearNode;
   MG.shuffle = shuffle;
+  MG.formatDate = formatDate;
 })(window);

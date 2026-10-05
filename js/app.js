@@ -7,6 +7,7 @@
   var elements = {};
   var game = null;
   var ready = false;
+  var resultSaved = false;
 
   function buildButton(className, text, attrs) {
     return el("button", {
@@ -89,6 +90,74 @@
     return el("div", { className: "board" }, elements.cardEls);
   }
 
+  function buildLeaderboard(results) {
+    if (!results.length) {
+      return el("p", {
+        className: "modal__message",
+        text: "No results yet."
+      });
+    }
+
+    var head = el("thead", {}, [
+      el("tr", {}, [
+        el("th", { text: "#" }),
+        el("th", { text: "Moves" }),
+        el("th", { text: "Date" })
+      ])
+    ]);
+
+    var rows = results.map(function (result, index) {
+      return el("tr", {}, [
+        el("td", { text: String(index + 1) }),
+        el("td", { text: String(result.moves) }),
+        el("td", { text: MG.formatDate(result.date) })
+      ]);
+    });
+
+    return el("table", { className: "leaderboard" }, [
+      head,
+      el("tbody", {}, rows)
+    ]);
+  }
+
+  function openVictoryModal(moves) {
+    MG.openModal({
+      title: "You win!",
+      content: [
+        el("p", {
+          className: "modal__message",
+          text: "All pairs found. Well done!"
+        }),
+        el("p", {
+          className: "modal__message modal__message--score",
+          text: "Moves: " + moves
+        })
+      ],
+      actions: [{ label: "New game", onClick: startNewGame }]
+    });
+  }
+
+  function openLeaderboardModal() {
+    MG.openModal({
+      title: "Leaderboard",
+      content: buildLeaderboard(MG.storage.getTop())
+    });
+  }
+
+  function onWin(state) {
+    if (resultSaved) {
+      return;
+    }
+    resultSaved = true;
+    MG.storage.addResult(state.moves);
+    openVictoryModal(state.moves);
+  }
+
+  function startNewGame() {
+    resultSaved = false;
+    game.newGame();
+  }
+
   function render(state) {
     if (!ready) {
       return;
@@ -110,8 +179,6 @@
     });
   }
 
-  function onWin() {}
-
   function init() {
     game = new MG.Game({
       types: MG.CARD_TYPES,
@@ -126,9 +193,8 @@
 
     document.body.appendChild(app);
 
-    elements.newGame.addEventListener("click", function () {
-      game.newGame();
-    });
+    elements.newGame.addEventListener("click", startNewGame);
+    elements.leaderboard.addEventListener("click", openLeaderboardModal);
 
     ready = true;
     render(game.getState());
