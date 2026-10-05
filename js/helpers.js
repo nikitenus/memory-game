@@ -1,0 +1,73 @@
+(function (global) {
+  "use strict";
+
+  var MG = (global.MG = global.MG || {});
+
+  function el(tag, props, children) {
+    var node = document.createElement(tag);
+    applyProps(node, props);
+    appendChildren(node, children);
+    return node;
+  }
+
+  function applyProps(node, props) {
+    if (!props) {
+      return;
+    }
+    Object.keys(props).forEach(function (key) {
+      var value = props[key];
+      if (value == null) {
+        return;
+      }
+      if (key === "className") {
+        node.className = value;
+      } else if (key === "text") {
+        node.textContent = String(value);
+      } else if (key === "attrs") {
+        setAttributes(node, value);
+      } else if (key === "on") {
+        addListeners(node, value);
+      } else {
+        node[key] = value;
+      }
+    });
+  }
+
+  function setAttributes(node, attrs) {
+    Object.keys(attrs).forEach(function (name) {
+      node.setAttribute(name, attrs[name]);
+    });
+  }
+
+  function addListeners(node, listeners) {
+    Object.keys(listeners).forEach(function (type) {
+      node.addEventListener(type, listeners[type]);
+    });
+  }
+
+  function appendChildren(node, children) {
+    if (children == null) {
+      return;
+    }
+    var list = Array.isArray(children) ? children : [children];
+    list.forEach(function (child) {
+      if (child == null) {
+        return;
+      }
+      if (typeof child === "string" || typeof child === "number") {
+        node.appendChild(document.createTextNode(String(child)));
+      } else {
+        node.appendChild(child);
+      }
+    });
+  }
+
+  function clearNode(node) {
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
+  }
+
+  MG.el = el;
+  MG.clearNode = clearNode;
+})(window);
