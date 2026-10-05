@@ -1,0 +1,220 @@
+(function (global) {
+  "use strict";
+
+  var MG = (global.MG = global.MG || {});
+  var el = MG.el;
+
+  var elements = {};
+  var game = null;
+  var ready = false;
+  var resultSaved = false;
+
+  function buildButton(className, text, attrs) {
+    return el("button", {
+      className: className,
+      type: "button",
+      text: text,
+      attrs: attrs
+    });
+  }
+
+  function buildHeader() {
+    var newGameButton = buildButton("button", "New game", { id: "new-game" });
+    var leaderboardButton = buildButton("button", "Leaderboard", {
+      id: "leaderboard"
+    });
+
+    elements.newGame = newGameButton;
+    elements.leaderboard = leaderboardButton;
+
+    return el("header", { className: "header" }, [
+      el("h1", { className: "header__title", text: "Memory" }),
+      el("div", { className: "header__actions" }, [
+        newGameButton,
+        leaderboardButton
+      ])
+    ]);
+  }
+
+  function buildStats() {
+    var moves = el("span", {
+      className: "stats__item",
+      attrs: { "data-stat": "moves" }
+    });
+    var pairs = el("span", {
+      className: "stats__item",
+      attrs: { "data-stat": "pairs" }
+    });
+
+    elements.moves = moves;
+    elements.pairs = pairs;
+
+    return el("p", { className: "stats" }, [moves, pairs]);
+  }
+
+  function buildCard(card, index) {
+    var back = el("div", { className: "card__face card__face--back" });
+    var image = el("img", {
+      className: "card__image",
+      src: card.src,
+      alt: "",
+      attrs: { draggable: "false" }
+    });
+    var front = el("div", { className: "card__face card__face--front" }, [
+      image
+    ]);
+    var inner = el("div", { className: "card__inner" }, [back, front]);
+
+    var button = el(
+      "button",
+      {
+        className: "card",
+        type: "button",
+        attrs: {
+          "aria-label": "Hidden card",
+          "data-card-index": String(index)
+        },
+        on: {
+          click: function () {
+            game.flip(index);
+          }
+        }
+      },
+      [inner]
+    );
+
+    return { button: button, image: image };
+  }
+
+  function buildBoard() {
+    var cards = game.getState().cards;
+    elements.cardEls = [];
+    elements.cardImgs = [];
+
+    cards.forEach(function (card, index) {
+      var built = buildCard(card, index);
+      elements.cardEls.push(built.button);
+      elements.cardImgs.push(built.image);
+    });
+
+    return el("div", { className: "board" }, elements.cardEls);
+  }
+
+  function buildLeaderboard(results) {
+    if (!results.length) {
+      return el("p", {
+        className: "modal__message",
+        text: "No results yet."
+      });
+    }
+
+    var head = el("thead", {}, [
+      el("tr", {}, [
+        el("th", { text: "#" }),
+        el("th", { text: "Moves" }),
+        el("th", { text: "Date" })
+      ])
+    ]);
+
+    var rows = results.map(function (result, index) {
+      return el("tr", {}, [
+        el("td", { text: String(index + 1) }),
+        el("td", { text: String(result.moves) }),
+        el("td", { text: MG.formatDate(result.date) })
+      ]);
+    });
+
+    return el("table", { className: "leaderboard" }, [
+      head,
+      el("tbody", {}, rows)
+    ]);
+  }
+
+  function openVictoryModal(moves) {
+    MG.openModal({
+      title: "You win!",
+      content: [
+        el("p", {
+          className: "modal__message",
+          text: "All pairs found. Well done!"
+        }),
+        el("p", {
+          className: "modal__message modal__message--score",
+          text: "Moves: " + moves
+        })
+      ],
+      actions: [{ label: "New game", onClick: startNewGame }]
+    });
+  }
+
+  function openLeaderboardModal() {
+    MG.openModal({
+      title: "Leaderboard",
+      content: buildLeaderboard(MG.storage.getTop())
+    });
+  }
+
+  function onWin(state) {
+    if (resultSaved) {
+      return;
+    }
+    resultSaved = true;
+    MG.storage.addResult(state.moves);
+    openVictoryModal(state.moves);
+  }
+
+  function startNewGame() {
+    resultSaved = false;
+    game.newGame();
+  }
+
+  function render(state) {
+    if (!ready) {
+      return;
+    }
+
+    elements.moves.textContent = "Moves: " + state.moves;
+    elements.pairs.textContent =
+      "Pairs: " + state.found + " / " + state.totalPairs;
+
+    state.cards.forEach(function (card, index) {
+      var node = elements.cardEls[index];
+      if (!node) {
+        return;
+      }
+      var image = elements.cardImgs[index];
+      if (image && image.getAttribute("src") !== card.src) {
+        image.setAttribute("src", card.src);
+      }
+      node.setAttribute("data-card-type", card.typeId);
+
+      var open = card.status !== "hidden";
+      node.classList.toggle("is-flipped", open);
+      node.classList.toggle("is-matched", card.status === "matched");
+      node.setAttribute("aria-label", open ? card.typeLabel : "Hidden card");
+    });
+  }
+
+  function init() {
+    game = new MG.Game({
+      types: MG.CARD_TYPES,
+      onChange: render,
+      onWin: onWin
+    });
+
+    var app = el("div", { className: "app" }, [
+      buildHeader(),
+      el("main", { className: "main" }, [buildStats(), buildBoard()])
+    ]);
+
+    document.body.appendChild(app);
+
+    elements.newGame.addEventListener("click", startNewGame);
+    elements.leaderboard.addEventListener("click", openLeaderboardModal);
+
+    ready = true;
+    render(game.getState());
+  }
+
+  init();
+})(window);
