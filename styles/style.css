@@ -118,6 +118,14 @@ body {
   transform: rotateY(180deg);
 }
 
+.card.is-matched {
+  cursor: default;
+}
+
+.card.is-matched .card__face--front {
+  box-shadow: inset 0 0 0 3px #22c55e;
+}
+
 .card__face {
   position: absolute;
   inset: 0;

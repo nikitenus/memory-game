@@ -68,6 +68,18 @@
     }
   }
 
+  function shuffle(items) {
+    var result = items.slice();
+    for (var i = result.length - 1; i > 0; i -= 1) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var swap = result[i];
+      result[i] = result[j];
+      result[j] = swap;
+    }
+    return result;
+  }
+
   MG.el = el;
   MG.clearNode = clearNode;
+  MG.shuffle = shuffle;
 })(window);
