@@ -14,6 +14,19 @@
     });
   }
 
+  function setSiblingsInert(overlay, inert) {
+    Array.prototype.forEach.call(document.body.children, function (child) {
+      if (child === overlay) {
+        return;
+      }
+      if (inert) {
+        child.setAttribute("inert", "");
+      } else {
+        child.removeAttribute("inert");
+      }
+    });
+  }
+
   function openModal(options) {
     options = options || {};
     modalCounter += 1;
@@ -63,6 +76,26 @@
       if (event.key === "Escape") {
         event.preventDefault();
         close();
+      } else if (event.key === "Tab") {
+        trapFocus(event);
+      }
+    }
+
+    function trapFocus(event) {
+      var focusable = dialog.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) {
+        return;
+      }
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     }
 
@@ -79,6 +112,7 @@
       overlay.parentNode.removeChild(overlay);
       overlay.removeEventListener("click", onOverlayClick);
       document.removeEventListener("keydown", onKeydown, true);
+      setSiblingsInert(overlay, false);
       document.body.style.overflow = previousOverflow;
       if (previouslyFocused && typeof previouslyFocused.focus === "function") {
         previouslyFocused.focus();
@@ -92,6 +126,7 @@
     document.addEventListener("keydown", onKeydown, true);
     document.body.style.overflow = "hidden";
     document.body.appendChild(overlay);
+    setSiblingsInert(overlay, true);
     dialog.focus();
 
     return { close: close, element: overlay };
