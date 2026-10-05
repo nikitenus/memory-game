@@ -65,7 +65,7 @@
     ]);
     var inner = el("div", { className: "card__inner" }, [back, front]);
 
-    return el(
+    var button = el(
       "button",
       {
         className: "card",
@@ -82,11 +82,21 @@
       },
       [inner]
     );
+
+    return { button: button, image: image };
   }
 
   function buildBoard() {
     var cards = game.getState().cards;
-    elements.cardEls = cards.map(buildCard);
+    elements.cardEls = [];
+    elements.cardImgs = [];
+
+    cards.forEach(function (card, index) {
+      var built = buildCard(card, index);
+      elements.cardEls.push(built.button);
+      elements.cardImgs.push(built.image);
+    });
+
     return el("div", { className: "board" }, elements.cardEls);
   }
 
@@ -172,6 +182,12 @@
       if (!node) {
         return;
       }
+      var image = elements.cardImgs[index];
+      if (image && image.getAttribute("src") !== card.src) {
+        image.setAttribute("src", card.src);
+      }
+      node.setAttribute("data-card-type", card.typeId);
+
       var open = card.status !== "hidden";
       node.classList.toggle("is-flipped", open);
       node.classList.toggle("is-matched", card.status === "matched");
