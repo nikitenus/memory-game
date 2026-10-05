@@ -12,7 +12,3 @@
 python3 -m http.server 8000
 # → http://localhost:8000/
 ```
-
-## Ассеты
-
-SVG-иконки — [Lucide](https://lucide.dev), лицензия ISC (см. `assets/ATTRIBUTION.md`).
